@@ -1,12 +1,12 @@
 # Whatsapp Signal Bridge
 
-This application lets you forward all messages which you receive in your Whatsapp account to signal. Big thanks to all contributors of the [Rhymen/go-whatsapp](https://github.com/Rhymen/go-whatsapp) and [signal-cli](https://github.com/AsamK/signal-cli).
+This application lets you forward all messages which you receive in your Whatsapp account to Signal. Big thanks to all contributors of the [Rhymen/go-whatsapp](https://github.com/Rhymen/go-whatsapp) and [signal-cli](https://github.com/AsamK/signal-cli).
 
 ## How it works
 
-For this application to work you need a separate phone number for your bot. The bot sends the Whatsapp messages to your main signal number. So you receive all Whatsapp messages in a separate signal chat.
+For this application to work you need a separate phone number for your bot. The bot sends the Whatsapp messages to your main Signal number. So you receive all Whatsapp messages in a separate Signal chat.
 
-The messages you receive in this signal chat include the Whatsapp chat-id, the name or the number of the sender, the group name, the message and the attachments.
+The messages you receive in this Signal chat include the Whatsapp chat-id, the name or the number of the sender, the group name, the message and the attachments.
 
 _Example text message structure:_
 
@@ -58,7 +58,7 @@ After the qr-code was scanned the connection should be established and the sessi
 
 ## Skills
 
-You can control the application with a couple of commands. Type `@bot help` in signal or Whatsapp for more information.
+You can control the application with a couple of commands. Type `@bot help` in Signal or Whatsapp for more information.
 
 ## Legal
 
