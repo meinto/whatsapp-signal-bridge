@@ -26,6 +26,8 @@ You need to install [signal-cli](https://github.com/AsamK/signal-cli).
 
 ([Native Library](https://github.com/AsamK/signal-cli/wiki/Provide-native-lib-for-libsignal)) ([Use Correct Libsignal-client Version](https://github.com/AsamK/signal-cli/issues/562#issuecomment-792274797)) ([Maybe useful](https://github.com/AsamK/signal-cli/discussions/393#discussioncomment-246169))
 
+After installation you have to [register your separate phone number](https://github.com/AsamK/signal-cli/blob/master/man/signal-cli.1.adoc#register).
+
 ## Build
 
 ```go
