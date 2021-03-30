@@ -24,10 +24,10 @@ func TestClient_Subscribe(t *testing.T) {
 	q.Reset()
 	client := NewClient(q)
 
-	subscriptionCalled := false
 	MOCK_QUEUE_ID := "MOCK_QUEUE"
 	mockMessage := PlainMessage().SetChatID("mock")
 
+	subscriptionCalled := false
 	client.Subscribe(MOCK_QUEUE_ID, func(msg Message) {
 		subscriptionCalled = true
 		if msg.ChatID() != mockMessage.ChatID() {
