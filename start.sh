@@ -14,4 +14,4 @@ fi
 
 go build -o bot .
 pkill -f whatsappSignalBridge
-nohup bash -c "exec -a whatsappSignalBridge $(pwd)/bot --bot=$1 --receiver=$2" > /dev/null 2>&1 & 
+nohup bash -c "exec -a whatsappSignalBridge $(pwd)/bot --bot=$1 --receiver=$2" & 
