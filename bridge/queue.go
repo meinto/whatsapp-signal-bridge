@@ -15,7 +15,7 @@ type queue struct {
 }
 
 func NewQueue() Queue {
-	return &queue{}
+	return NewQueueLogger(&queue{})
 }
 
 func (q *queue) Publish(messageQueueId string, msg Message) {

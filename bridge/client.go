@@ -13,7 +13,7 @@ type client struct {
 }
 
 func NewClient(queue Queue) Client {
-	return &client{queue}
+	return NewClientLogger(&client{queue})
 }
 
 func (c *client) Publish(messageQueueId string, msg Message) {

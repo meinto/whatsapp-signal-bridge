@@ -9,6 +9,7 @@ import (
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/whatsapp-signal-bridge/bridge"
+	"github.com/whatsapp-signal-bridge/logger"
 )
 
 type WhatsappClient interface {
@@ -20,6 +21,7 @@ type client struct {
 	wac            *whatsapp.Conn
 	restoreAttemts int
 	startTime      uint64
+	logger         logger.Logger
 }
 
 type WhatsappClientOptions struct {
@@ -34,6 +36,7 @@ func StartClient(options WhatsappClientOptions) {
 		wac,
 		0,
 		uint64(time.Now().Unix()),
+		logger.NewLogger("whatsapp"),
 	}
 
 	c.Subscribe(bridge.SIGNAL_QUEUE, func(msg bridge.Message) {
@@ -163,22 +166,6 @@ func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-func (c *client) HandleError(err error) {
-	c.Publish(bridge.WHATSAPP_QUEUE, bridge.ErrorMessage(err))
-
-	// https://github.com/Rhymen/go-whatsapp/issues/343#issuecomment-621584947
-	if strings.Contains(err.Error(), "server closed connection") || strings.Contains(err.Error(), "close 1006") {
-		c.restoreAttemts++
-		c.startTime = uint64(time.Now().Unix())
-
-		if c.restoreAttemts > 5 {
-			c.Publish(bridge.WHATSAPP_QUEUE, bridge.PlainTextMessage("Cannot restore session.\nPlease restart manually."))
-		}
-
-		c.RestoreWhatsappConnection()
-	}
 }
 
 func (c *client) HandleTextMessage(message whatsapp.TextMessage) {

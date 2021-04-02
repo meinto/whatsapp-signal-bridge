@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"mime"
 	"os"
 	"os/exec"
 	"path"
 
 	"github.com/whatsapp-signal-bridge/bridge"
+	"github.com/whatsapp-signal-bridge/logger"
 )
 
 type SignalClient interface {
@@ -22,6 +22,7 @@ type client struct {
 	bridge.Client
 	botNumber      string
 	receiverNumber string
+	logger         logger.Logger
 }
 
 type SignalClientOptions struct {
@@ -35,6 +36,7 @@ func StartClient(options SignalClientOptions) {
 		bridge.NewClient(options.Queue),
 		options.BotNumber,
 		options.ReceiverNumber,
+		logger.NewLogger("signal"),
 	}
 	c.Subscribe(bridge.WHATSAPP_QUEUE, func(msg bridge.Message) {
 		c.Send(msg)
@@ -79,7 +81,7 @@ func (c *client) Send(msg bridge.Message) (executed bool, err error) {
 			cmd.Args = append(cmd.Args, "-a", filePath)
 			defer func() {
 				if err := os.Remove(filePath); err != nil {
-					log.Println("error removing file:", filePath)
+					c.logger.Log("error removing file:", filePath)
 				}
 			}()
 		}
@@ -99,7 +101,7 @@ func (c *client) receiveMessages() {
 	stdout, err := cmd.StdoutPipe()
 
 	if err != nil {
-		log.Println(err)
+		c.logger.Log(err)
 	}
 	cmd.Start()
 
@@ -108,12 +110,12 @@ func (c *client) receiveMessages() {
 	for scanner.Scan() {
 		row := scanner.Text()
 
-		log.Println(row)
+		c.logger.Log(row)
 
 		var signalCLIMessage SignalCLIMessage
 		err := json.Unmarshal([]byte(row), &signalCLIMessage)
 		if err != nil {
-			log.Println(err)
+			c.logger.Log(err)
 		}
 
 		if signalCLIMessage.Envelope.DataMessage != nil {
@@ -137,7 +139,7 @@ func (c *client) receiveMessages() {
 					data, err := ioutil.ReadFile(filePath)
 					defer func() {
 						if err := os.Remove(filePath); err != nil {
-							log.Println("error removing signal file")
+							c.logger.Log("error removing signal file")
 						}
 					}()
 					if err == nil {
@@ -146,10 +148,10 @@ func (c *client) receiveMessages() {
 							Type:  signalCLIMessage.Envelope.DataMessage.Attachments[0].ContentType,
 						})
 					} else {
-						log.Println(err)
+						c.logger.Log(err)
 					}
 				} else {
-					log.Println(err)
+					c.logger.Log(err)
 				}
 			}
 
