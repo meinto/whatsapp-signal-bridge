@@ -2,6 +2,7 @@ package whatsapp
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -68,7 +69,7 @@ func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 	if msg.Quote() != nil {
 		quoteBody := msg.Quote().Body
 		if quoteBody == nil {
-			return
+			return false, errors.New("quote body doesn't exist")
 		}
 
 		quoteParts := strings.Split(*quoteBody, "---")
@@ -76,7 +77,7 @@ func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 
 		type whatsappMetaData struct {
 			// WhatsappMessageID string
-			WhatsappChatID string
+			WhatsappChatID *string
 		}
 		metaData := &whatsappMetaData{}
 		headerParts := strings.Split(header, "\n")
@@ -84,15 +85,19 @@ func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 			rowParts := strings.Split(row, ":")
 			if len(rowParts) > 1 {
 				key := rowParts[0]
-				val := rowParts[1]
+				val := strings.TrimSpace(rowParts[1])
 
 				switch strings.TrimSpace(key) {
 				// case "id":
 				// 	metaData.WhatsappMessageID = strings.TrimSpace(val)
 				case "chatid":
-					metaData.WhatsappChatID = strings.TrimSpace(val)
+					metaData.WhatsappChatID = &val
 				}
 			}
+		}
+
+		if metaData.WhatsappChatID == nil {
+			return false, errors.New("cannot send whatsapp message: missing whatsapp chat id")
 		}
 
 		msgText := msg.Body()
@@ -111,7 +116,7 @@ func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 		}
 
 		waMessageInfo := whatsapp.MessageInfo{
-			RemoteJid: metaData.WhatsappChatID,
+			RemoteJid: *metaData.WhatsappChatID,
 		}
 
 		var waMsg interface{}
