@@ -106,7 +106,9 @@ func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 			bodyParts := strings.Split(body, "\n")
 			quoteTextParts := []string{}
 			for _, p := range bodyParts {
-				quoteTextParts = append(quoteTextParts, "> "+p)
+				if !strings.HasPrefix(p, "▒") {
+					quoteTextParts = append(quoteTextParts, "▒ _"+p+"_")
+				}
 			}
 			quoteText := strings.Join(quoteTextParts, "\n")
 			if strings.Contains(strings.ToLower(msgText), "quote") {

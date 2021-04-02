@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 
 	"github.com/whatsapp-signal-bridge/bridge"
 	"github.com/whatsapp-signal-bridge/logger"
@@ -63,9 +64,13 @@ func (c *client) Send(msg bridge.Message) (executed bool, err error) {
 	}
 
 	if msg.Quote() != nil {
-		textMessage += "> " + string(msg.Quote().MessageType)
+		textMessage += "▒ type: " + string(msg.Quote().MessageType+"\n")
 		if quoteText := msg.Quote().Body; quoteText != nil {
-			textMessage += ":" + *quoteText
+			quoteTextParts := []string{}
+			for _, p := range strings.Split(*quoteText, "\n") {
+				quoteTextParts = append(quoteTextParts, "▒ "+p)
+			}
+			textMessage += strings.Join(quoteTextParts, "\n")
 		}
 		textMessage += "\n"
 	}
