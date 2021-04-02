@@ -119,8 +119,12 @@ func (c *client) receiveMessages() {
 		if signalCLIMessage.Envelope.DataMessage != nil {
 			currentMessage.
 				SetSender(signalCLIMessage.Envelope.Source).
-				SetBody(signalCLIMessage.Envelope.DataMessage.Message).
-				SetQuote(&bridge.Quote{MessageType: bridge.TEXT_MESSAGE_TYPE, Body: &signalCLIMessage.Envelope.DataMessage.Quote.Text})
+				SetBody(signalCLIMessage.Envelope.DataMessage.Message)
+
+			if signalCLIMessage.Envelope.DataMessage.Quote != nil {
+				currentMessage.
+					SetQuote(&bridge.Quote{MessageType: bridge.TEXT_MESSAGE_TYPE, Body: &signalCLIMessage.Envelope.DataMessage.Quote.Text})
+			}
 
 			if len(signalCLIMessage.Envelope.DataMessage.Attachments) > 0 && signalCLIMessage.Envelope.DataMessage.Attachments[0].ID != "" {
 				homeDir, err := os.UserHomeDir()

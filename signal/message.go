@@ -23,7 +23,7 @@ type SignalCLIMessage struct {
 				Size        int     `json:"size,omitempty"`
 			} `json:"attachments,omitempty"`
 			// Mentions ???
-			Quote struct {
+			Quote *struct {
 				ID          int    `json:"id,omitempty"`
 				Author      string `json:"author,omitempty"`
 				Text        string `json:"text,omitempty"`
