@@ -10,19 +10,98 @@ import (
 
 type WhatsappBridgeMessage interface {
 	bridge.Message
+	Build()
 	SetInfo(whatsapp.MessageInfo) WhatsappBridgeMessage
 	SetWhatsappQuote(*proto.Message) WhatsappBridgeMessage
+	HasErrors() (WhatsappBridgeMessage, bool)
 }
 
 type whatsappBridgeMessage struct {
 	bridge.Message
-	wac *whatsapp.Conn
+	wac    *whatsapp.Conn
+	wam    interface{}
+	errors []error
 }
 
-func NewWhatsappMessage(wac *whatsapp.Conn) WhatsappBridgeMessage {
-	return &whatsappBridgeMessage{
+func NewWhatsappBridgeMessage(wac *whatsapp.Conn, whatsappMessage interface{}) WhatsappBridgeMessage {
+	whatsappBridgeMessage := &whatsappBridgeMessage{
 		Message: bridge.PlainMessage(),
 		wac:     wac,
+		wam:     whatsappMessage,
+	}
+	whatsappBridgeMessage.Build()
+	return whatsappBridgeMessage
+}
+
+func (m *whatsappBridgeMessage) Build() {
+
+	var attachmentBytes []byte
+	var errAttachmentDownload error
+	switch m.wam.(type) {
+	case whatsapp.ImageMessage:
+		wam := m.wam.(whatsapp.ImageMessage)
+		attachmentBytes, errAttachmentDownload = wam.Download()
+	case whatsapp.DocumentMessage:
+		wam := m.wam.(whatsapp.DocumentMessage)
+		attachmentBytes, errAttachmentDownload = wam.Download()
+	case whatsapp.VideoMessage:
+		wam := m.wam.(whatsapp.VideoMessage)
+		attachmentBytes, errAttachmentDownload = wam.Download()
+	case whatsapp.AudioMessage:
+		wam := m.wam.(whatsapp.AudioMessage)
+		attachmentBytes, errAttachmentDownload = wam.Download()
+	}
+	if errAttachmentDownload != nil {
+		m.errors = append(m.errors, errAttachmentDownload)
+	}
+
+	if _, hasErrors := m.HasErrors(); !hasErrors {
+		switch m.wam.(type) {
+		case whatsapp.TextMessage:
+			wam := m.wam.(whatsapp.TextMessage)
+			m.SetInfo(wam.Info).
+				SetWhatsappQuote(wam.ContextInfo.QuotedMessage).
+				SetBody(wam.Text)
+
+		case whatsapp.ImageMessage:
+			wam := m.wam.(whatsapp.ImageMessage)
+			m.SetInfo(wam.Info).
+				SetWhatsappQuote(wam.ContextInfo.QuotedMessage).
+				SetBody(wam.Caption).
+				SetAttachment(&bridge.Attachment{
+					Bytes: attachmentBytes,
+					Type:  wam.Type,
+				})
+
+		case whatsapp.DocumentMessage:
+			wam := m.wam.(whatsapp.DocumentMessage)
+			m.SetInfo(wam.Info).
+				SetWhatsappQuote(wam.ContextInfo.QuotedMessage).
+				SetBody(wam.Title).
+				SetAttachment(&bridge.Attachment{
+					Bytes: attachmentBytes,
+					Type:  wam.Type,
+				})
+
+		case whatsapp.VideoMessage:
+			wam := m.wam.(whatsapp.VideoMessage)
+			m.SetInfo(wam.Info).
+				SetWhatsappQuote(wam.ContextInfo.QuotedMessage).
+				SetBody(wam.Caption).
+				SetAttachment(&bridge.Attachment{
+					Bytes: attachmentBytes,
+					Type:  wam.Type,
+				})
+
+		case whatsapp.AudioMessage:
+			wam := m.wam.(whatsapp.AudioMessage)
+			m.SetInfo(wam.Info).
+				SetWhatsappQuote(wam.ContextInfo.QuotedMessage).
+				SetAttachment(&bridge.Attachment{
+					Bytes: attachmentBytes,
+					Type:  wam.Type,
+				})
+		}
 	}
 }
 
@@ -108,4 +187,8 @@ func (m *whatsappBridgeMessage) getSenderID(info whatsapp.MessageInfo) (senderID
 		senderID = *info.Source.Participant
 	}
 	return senderID
+}
+
+func (m *whatsappBridgeMessage) HasErrors() (WhatsappBridgeMessage, bool) {
+	return m, len(m.errors) > 0
 }
