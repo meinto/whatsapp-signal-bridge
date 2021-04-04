@@ -8,25 +8,25 @@ import (
 	"github.com/whatsapp-signal-bridge/bridge"
 )
 
-type WhatsappMessage interface {
+type WhatsappBridgeMessage interface {
 	bridge.Message
-	SetInfo(whatsapp.MessageInfo) WhatsappMessage
-	SetWhatsappQuote(*proto.Message) WhatsappMessage
+	SetInfo(whatsapp.MessageInfo) WhatsappBridgeMessage
+	SetWhatsappQuote(*proto.Message) WhatsappBridgeMessage
 }
 
-type whatsappMessage struct {
+type whatsappBridgeMessage struct {
 	bridge.Message
 	wac *whatsapp.Conn
 }
 
-func NewWhatsappMessage(wac *whatsapp.Conn) WhatsappMessage {
-	return &whatsappMessage{
+func NewWhatsappMessage(wac *whatsapp.Conn) WhatsappBridgeMessage {
+	return &whatsappBridgeMessage{
 		Message: bridge.PlainMessage(),
 		wac:     wac,
 	}
 }
 
-func (m *whatsappMessage) SetInfo(info whatsapp.MessageInfo) WhatsappMessage {
+func (m *whatsappBridgeMessage) SetInfo(info whatsapp.MessageInfo) WhatsappBridgeMessage {
 	m.SetID(info.Id)
 	m.SetChatID(info.RemoteJid)
 	m.SetChatName(m.getChatName(info))
@@ -34,7 +34,7 @@ func (m *whatsappMessage) SetInfo(info whatsapp.MessageInfo) WhatsappMessage {
 	return m
 }
 
-func (m *whatsappMessage) SetWhatsappQuote(quotedMessage *proto.Message) WhatsappMessage {
+func (m *whatsappBridgeMessage) SetWhatsappQuote(quotedMessage *proto.Message) WhatsappBridgeMessage {
 	if quotedMessage != nil {
 		if quotedMessage.Conversation != nil {
 			m.SetQuote(&bridge.Quote{
@@ -80,12 +80,12 @@ func (m *whatsappMessage) SetWhatsappQuote(quotedMessage *proto.Message) Whatsap
 	return m
 }
 
-func (m *whatsappMessage) getChatName(info whatsapp.MessageInfo) string {
+func (m *whatsappBridgeMessage) getChatName(info whatsapp.MessageInfo) string {
 	chatID := m.ChatID()
 	return m.wac.Store.Chats[chatID].Name
 }
 
-func (m *whatsappMessage) getSender(info whatsapp.MessageInfo) string {
+func (m *whatsappBridgeMessage) getSender(info whatsapp.MessageInfo) string {
 	if info.FromMe {
 		return "Me"
 	}
@@ -101,7 +101,7 @@ func (m *whatsappMessage) getSender(info whatsapp.MessageInfo) string {
 	return sender
 }
 
-func (m *whatsappMessage) getSenderID(info whatsapp.MessageInfo) (senderID string) {
+func (m *whatsappBridgeMessage) getSenderID(info whatsapp.MessageInfo) (senderID string) {
 	if info.Source.Participant == nil {
 		senderID = info.RemoteJid
 	} else {
