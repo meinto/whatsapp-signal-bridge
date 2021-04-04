@@ -10,23 +10,23 @@ type clientLogger struct {
 }
 
 func NewClientLogger(client Client) Client {
-	return &clientLogger{client, logger.NewLogger("client")}
+	return &clientLogger{client, logger.NewLogger("client", logger.LOG_LEVEL_DEBUG)}
 }
 
 func (l *clientLogger) Publish(messageQueueId string, msg Message) {
-	l.logger.Log("publish", msg, "to", messageQueueId)
+	l.logger.LogDebug("publish", msg, "to", messageQueueId)
 	l.next.Publish(messageQueueId, msg)
 }
 
 func (l *clientLogger) Subscribe(messageQueueId string, callback func(msg Message)) {
-	l.logger.Log("new subscription to", messageQueueId)
+	l.logger.LogDebug("new subscription to", messageQueueId)
 	l.next.Subscribe(messageQueueId, func(msg Message) {
-		l.logger.Log("received message on", messageQueueId, ":", msg)
+		l.logger.LogDebug("received message on", messageQueueId, ":", msg)
 		callback(msg)
 	})
 }
 
 func (l *clientLogger) Send(msg Message) {
-	l.logger.Log(msg)
+	l.logger.LogDebug(msg)
 	l.next.Send(msg)
 }

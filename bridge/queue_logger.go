@@ -10,18 +10,18 @@ type queueLogger struct {
 }
 
 func NewQueueLogger(queue Queue) Queue {
-	return &queueLogger{queue, logger.NewLogger("queue")}
+	return &queueLogger{queue, logger.NewLogger("queue", logger.LOG_LEVEL_DEBUG)}
 }
 
 func (l *queueLogger) Publish(messageQueueId string, msg Message) {
-	l.logger.Log("publish", msg, "to", messageQueueId)
+	l.logger.LogDebug("publish", msg, "to", messageQueueId)
 	l.next.Publish(messageQueueId, msg)
 }
 
 func (l *queueLogger) Subscribe(callback func(messageQueueId string, msg Message)) {
-	l.logger.Log("new subscription")
+	l.logger.LogDebug("new subscription")
 	l.next.Subscribe(func(messageQueueId string, msg Message) {
-		l.logger.Log("received message on", messageQueueId, ":", msg)
+		l.logger.LogDebug("received message on", messageQueueId, ":", msg)
 		callback(messageQueueId, msg)
 	})
 }

@@ -37,7 +37,7 @@ func StartClient(options SignalClientOptions) {
 		bridge.NewClient(options.Queue),
 		options.BotNumber,
 		options.ReceiverNumber,
-		logger.NewLogger("signal"),
+		logger.NewLogger("signal", logger.LOG_LEVEL_DEBUG),
 	}
 	c.Subscribe(bridge.WHATSAPP_QUEUE, func(msg bridge.Message) {
 		c.Send(msg)
@@ -86,7 +86,7 @@ func (c *client) Send(msg bridge.Message) (executed bool, err error) {
 			cmd.Args = append(cmd.Args, "-a", filePath)
 			defer func() {
 				if err := os.Remove(filePath); err != nil {
-					c.logger.Log("error removing file:", filePath)
+					c.logger.LogError("error removing file:", filePath)
 				}
 			}()
 		}
@@ -106,7 +106,7 @@ func (c *client) receiveMessages() {
 	stdout, err := cmd.StdoutPipe()
 
 	if err != nil {
-		c.logger.Log(err)
+		c.logger.LogError(err)
 	}
 	cmd.Start()
 
@@ -115,12 +115,12 @@ func (c *client) receiveMessages() {
 	for scanner.Scan() {
 		row := scanner.Text()
 
-		c.logger.Log(row)
+		c.logger.LogDebug(row)
 
 		var signalCLIMessage SignalCLIMessage
 		err := json.Unmarshal([]byte(row), &signalCLIMessage)
 		if err != nil {
-			c.logger.Log(err)
+			c.logger.LogError(err)
 		}
 
 		if signalCLIMessage.Envelope.DataMessage != nil {
@@ -144,7 +144,7 @@ func (c *client) receiveMessages() {
 					data, err := ioutil.ReadFile(filePath)
 					defer func() {
 						if err := os.Remove(filePath); err != nil {
-							c.logger.Log("error removing signal file")
+							c.logger.LogError("error removing signal file", err)
 						}
 					}()
 					if err == nil {
@@ -153,10 +153,10 @@ func (c *client) receiveMessages() {
 							Type:  signalCLIMessage.Envelope.DataMessage.Attachments[0].ContentType,
 						})
 					} else {
-						c.logger.Log(err)
+						c.logger.LogError(err)
 					}
 				} else {
-					c.logger.Log(err)
+					c.logger.LogError(err)
 				}
 			}
 

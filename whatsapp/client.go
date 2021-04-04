@@ -37,7 +37,7 @@ func StartClient(options WhatsappClientOptions) {
 		wac,
 		0,
 		uint64(time.Now().Unix()),
-		logger.NewLogger("whatsapp"),
+		logger.NewLogger("whatsapp", logger.LOG_LEVEL_DEBUG),
 	}
 
 	c.Subscribe(bridge.SIGNAL_QUEUE, func(msg bridge.Message) {
