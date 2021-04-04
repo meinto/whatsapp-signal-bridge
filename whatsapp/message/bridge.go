@@ -1,4 +1,4 @@
-package whatsapp
+package message
 
 import (
 	"strings"
