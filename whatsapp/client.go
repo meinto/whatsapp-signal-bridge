@@ -1,16 +1,14 @@
 package whatsapp
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/Rhymen/go-whatsapp"
 	"github.com/whatsapp-signal-bridge/bridge"
 	"github.com/whatsapp-signal-bridge/logger"
+	"github.com/whatsapp-signal-bridge/whatsapp/message"
 )
 
 type WhatsappClient interface {
@@ -66,111 +64,11 @@ func (c *client) Send(msg bridge.Message) (executed bool, err error) {
 }
 
 func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
-	if msg.Quote() != nil {
-		quoteBody := msg.Quote().Body
-		if quoteBody == nil {
-			return false, errors.New("quote body doesn't exist")
-		}
-
-		quoteParts := strings.Split(*quoteBody, "---")
-		header := quoteParts[0]
-
-		type whatsappMetaData struct {
-			// WhatsappMessageID string
-			WhatsappChatID *string
-		}
-		metaData := &whatsappMetaData{}
-		headerParts := strings.Split(header, "\n")
-		for _, row := range headerParts {
-			rowParts := strings.Split(row, ":")
-			if len(rowParts) > 1 {
-				key := rowParts[0]
-				val := strings.TrimSpace(rowParts[1])
-
-				switch strings.TrimSpace(key) {
-				// case "id":
-				// 	metaData.WhatsappMessageID = strings.TrimSpace(val)
-				case "chatid":
-					metaData.WhatsappChatID = &val
-				}
-			}
-		}
-
-		if metaData.WhatsappChatID == nil {
-			return false, errors.New("cannot send whatsapp message: missing whatsapp chat id")
-		}
-
-		msgText := msg.Body()
-		if len(quoteParts) > 1 {
-			body := strings.TrimSpace(quoteParts[1])
-			bodyParts := strings.Split(body, "\n")
-			quoteTextParts := []string{}
-			for _, p := range bodyParts {
-				if !strings.HasPrefix(p, "▒") {
-					quoteTextParts = append(quoteTextParts, "▒ _"+p+"_")
-				}
-			}
-			quoteText := strings.Join(quoteTextParts, "\n")
-			if strings.Contains(strings.ToLower(msgText), "quote") {
-				msgText = strings.Replace(msgText, "quote", quoteText, -1)
-				msgText = strings.Replace(msgText, "Quote", quoteText, -1)
-			}
-		}
-
-		waMessageInfo := whatsapp.MessageInfo{
-			RemoteJid: *metaData.WhatsappChatID,
-		}
-
-		var waMsg interface{}
-		if msg.Attachment() == nil {
-			waMsg = whatsapp.TextMessage{
-				Info: waMessageInfo,
-				Text: msgText,
-			}
-		}
-
-		if msg.Attachment() != nil {
-			if strings.Contains(msg.Attachment().Type, "image") {
-				waMsg = whatsapp.ImageMessage{
-					Info:    waMessageInfo,
-					Type:    msg.Attachment().Type,
-					Content: bytes.NewReader(msg.Attachment().Bytes),
-					Caption: msgText,
-				}
-			}
-
-			if strings.Contains(msg.Attachment().Type, "video") {
-				waMsg = whatsapp.VideoMessage{
-					Info:    waMessageInfo,
-					Type:    msg.Attachment().Type,
-					Content: bytes.NewReader(msg.Attachment().Bytes),
-					Caption: msgText,
-				}
-			}
-
-			if strings.Contains(msg.Attachment().Type, "document") {
-				waMsg = whatsapp.DocumentMessage{
-					Info:    waMessageInfo,
-					Type:    msg.Attachment().Type,
-					Content: bytes.NewReader(msg.Attachment().Bytes),
-					Title:   msgText,
-				}
-			}
-
-			if strings.Contains(msg.Attachment().Type, "audio") {
-				waMsg = whatsapp.AudioMessage{
-					Info:    waMessageInfo,
-					Type:    msg.Attachment().Type,
-					Content: bytes.NewReader(msg.Attachment().Bytes),
-				}
-			}
-		}
-
-		if _, err := c.wac.Send(waMsg); err != nil {
+	if wam, err := message.NewWhatsappMessage(msg).Build(); err == nil {
+		if _, err := c.wac.Send(wam); err != nil {
 			fmt.Fprintf(os.Stderr, "error sending message: %v\n", err)
 			return false, err
 		}
-		return true, nil
 	}
 	return false, nil
 }
