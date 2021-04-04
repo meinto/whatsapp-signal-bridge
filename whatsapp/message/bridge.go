@@ -10,10 +10,10 @@ import (
 
 type WhatsappBridgeMessage interface {
 	bridge.Message
-	Build()
+	Build() (message WhatsappBridgeMessage, hasErrors bool)
 	SetInfo(whatsapp.MessageInfo) WhatsappBridgeMessage
 	SetWhatsappQuote(*proto.Message) WhatsappBridgeMessage
-	HasErrors() (WhatsappBridgeMessage, bool)
+	HasErrors() bool
 }
 
 type whatsappBridgeMessage struct {
@@ -29,11 +29,10 @@ func NewWhatsappBridgeMessage(wac *whatsapp.Conn, whatsappMessage interface{}) W
 		wac:     wac,
 		wam:     whatsappMessage,
 	}
-	whatsappBridgeMessage.Build()
 	return whatsappBridgeMessage
 }
 
-func (m *whatsappBridgeMessage) Build() {
+func (m *whatsappBridgeMessage) Build() (WhatsappBridgeMessage, bool) {
 
 	var attachmentBytes []byte
 	var errAttachmentDownload error
@@ -55,7 +54,7 @@ func (m *whatsappBridgeMessage) Build() {
 		m.errors = append(m.errors, errAttachmentDownload)
 	}
 
-	if _, hasErrors := m.HasErrors(); !hasErrors {
+	if !m.HasErrors() {
 		switch m.wam.(type) {
 		case whatsapp.TextMessage:
 			wam := m.wam.(whatsapp.TextMessage)
@@ -103,6 +102,8 @@ func (m *whatsappBridgeMessage) Build() {
 				})
 		}
 	}
+
+	return m, m.HasErrors()
 }
 
 func (m *whatsappBridgeMessage) SetInfo(info whatsapp.MessageInfo) WhatsappBridgeMessage {
@@ -189,6 +190,6 @@ func (m *whatsappBridgeMessage) getSenderID(info whatsapp.MessageInfo) (senderID
 	return senderID
 }
 
-func (m *whatsappBridgeMessage) HasErrors() (WhatsappBridgeMessage, bool) {
-	return m, len(m.errors) > 0
+func (m *whatsappBridgeMessage) HasErrors() bool {
+	return len(m.errors) > 0
 }
