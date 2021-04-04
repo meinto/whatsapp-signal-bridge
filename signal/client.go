@@ -124,44 +124,8 @@ func (c *client) receiveMessages() {
 			c.logger.LogError(err)
 		}
 
-		if signalCLIMessage.Envelope.DataMessage != nil {
-			currentMessage.
-				SetSender(signalCLIMessage.Envelope.Source).
-				SetBody(signalCLIMessage.Envelope.DataMessage.Message)
-
-			if signalCLIMessage.Envelope.DataMessage.Quote != nil {
-				currentMessage.
-					SetQuote(&bridge.Quote{MessageType: bridge.TEXT_MESSAGE_TYPE, Body: &signalCLIMessage.Envelope.DataMessage.Quote.Text})
-			}
-
-			if len(signalCLIMessage.Envelope.DataMessage.Attachments) > 0 && signalCLIMessage.Envelope.DataMessage.Attachments[0].ID != "" {
-				homeDir, err := os.UserHomeDir()
-				if err == nil {
-					filePath := path.Join(
-						homeDir,
-						".local/share/signal-cli/attachments",
-						signalCLIMessage.Envelope.DataMessage.Attachments[0].ID,
-					)
-					data, err := ioutil.ReadFile(filePath)
-					defer func() {
-						if err := os.Remove(filePath); err != nil {
-							c.logger.LogError("error removing signal file", err)
-						}
-					}()
-					if err == nil {
-						currentMessage.SetAttachment(&bridge.Attachment{
-							Bytes: data,
-							Type:  signalCLIMessage.Envelope.DataMessage.Attachments[0].ContentType,
-						})
-					} else {
-						c.logger.LogError(err)
-					}
-				} else {
-					c.logger.LogError(err)
-				}
-			}
-
-			if executed, err := c.ExecuteSkill(currentMessage); !executed || err != nil {
+		if msg, err := message.NewSignalBridgeMessage(&signalCLIMessage).Build(); err == nil {
+			if executed, err := c.ExecuteSkill(msg); !executed || err != nil {
 				c.Publish(bridge.SIGNAL_QUEUE, currentMessage)
 			}
 		}
