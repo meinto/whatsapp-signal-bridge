@@ -33,7 +33,7 @@ func StartClient(options WhatsappClientOptions) {
 	wac, _ := whatsappLogin()
 
 	c := &client{
-		bridge.NewClient(options.Queue),
+		bridge.NewClient(options.Queue, "whatsapp"),
 		wac,
 		0,
 		uint64(time.Now().Unix()),

@@ -10,7 +10,7 @@ type clientLogger struct {
 }
 
 func NewClientLogger(client Client) Client {
-	return &clientLogger{client, logger.NewLogger("client", logger.LOG_LEVEL_DEBUG)}
+	return &clientLogger{client, logger.NewLogger("client", logger.LOG_LEVEL_DEBUG).AddExtraTag(client.GetName())}
 }
 
 func (l *clientLogger) Publish(messageQueueId string, msg Message) {
@@ -24,6 +24,10 @@ func (l *clientLogger) Subscribe(messageQueueId string, callback func(msg Messag
 		l.logger.LogDebug("received message on", messageQueueId, ":", msg)
 		callback(msg)
 	})
+}
+
+func (l *clientLogger) GetName() string {
+	return l.next.GetName()
 }
 
 func (l *clientLogger) Send(msg Message) {

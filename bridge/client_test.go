@@ -5,7 +5,7 @@ import "testing"
 func TestClient_Publish(t *testing.T) {
 	q := NewMockQueue()
 	q.Reset()
-	client := NewClient(q)
+	client := NewClient(q, "test")
 
 	MOCK_QUEUE_ID := "MOCK_QUEUE"
 	mockMessage := PlainMessage().SetChatID("mock")
@@ -22,7 +22,7 @@ func TestClient_Publish(t *testing.T) {
 func TestClient_Subscribe(t *testing.T) {
 	q := NewMockQueue()
 	q.Reset()
-	client := NewClient(q)
+	client := NewClient(q, "test")
 
 	MOCK_QUEUE_ID := "MOCK_QUEUE"
 	mockMessage := PlainMessage().SetChatID("mock")

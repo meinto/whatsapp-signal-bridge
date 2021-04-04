@@ -34,7 +34,7 @@ type SignalClientOptions struct {
 
 func StartClient(options SignalClientOptions) {
 	c := &client{
-		bridge.NewClient(options.Queue),
+		bridge.NewClient(options.Queue, "signal"),
 		options.BotNumber,
 		options.ReceiverNumber,
 		logger.NewLogger("signal", logger.LOG_LEVEL_DEBUG),
