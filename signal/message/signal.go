@@ -1,4 +1,4 @@
-package signal
+package message
 
 type SignalCLIMessage struct {
 	Envelope struct {

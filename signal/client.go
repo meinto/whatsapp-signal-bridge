@@ -12,6 +12,7 @@ import (
 
 	"github.com/whatsapp-signal-bridge/bridge"
 	"github.com/whatsapp-signal-bridge/logger"
+	"github.com/whatsapp-signal-bridge/signal/message"
 )
 
 type SignalClient interface {
@@ -117,7 +118,7 @@ func (c *client) receiveMessages() {
 
 		c.logger.LogDebug(row)
 
-		var signalCLIMessage SignalCLIMessage
+		var signalCLIMessage message.SignalCLIMessage
 		err := json.Unmarshal([]byte(row), &signalCLIMessage)
 		if err != nil {
 			c.logger.LogError(err)
