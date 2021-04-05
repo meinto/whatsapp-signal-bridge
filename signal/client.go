@@ -111,7 +111,6 @@ func (c *client) receiveMessages() {
 	}
 	cmd.Start()
 
-	currentMessage := bridge.PlainMessage()
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		row := scanner.Text()
@@ -126,7 +125,7 @@ func (c *client) receiveMessages() {
 
 		if msg, err := message.NewSignalBridgeMessage(&signalCLIMessage).Build(); err == nil {
 			if executed, err := c.ExecuteSkill(msg); !executed || err != nil {
-				c.Publish(bridge.SIGNAL_QUEUE, currentMessage)
+				c.Publish(bridge.SIGNAL_QUEUE, msg)
 			}
 		}
 	}
