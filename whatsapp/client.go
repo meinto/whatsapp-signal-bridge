@@ -40,7 +40,7 @@ func StartClient(options WhatsappClientOptions) {
 
 	c.Subscribe(bridge.SIGNAL_QUEUE, func(msg bridge.Message) {
 		if executed, err := c.ExecuteSkill(msg, true); !executed || err != nil {
-			c.Replay(msg)
+			c.Send(msg)
 		}
 	})
 
@@ -50,20 +50,6 @@ func StartClient(options WhatsappClientOptions) {
 }
 
 func (c *client) Send(msg bridge.Message) (executed bool, err error) {
-	waMsg := whatsapp.TextMessage{
-		Info: whatsapp.MessageInfo{
-			RemoteJid: msg.ChatID(),
-		},
-		Text: msg.Body(),
-	}
-	if _, err := c.wac.Send(waMsg); err != nil {
-		fmt.Fprintf(os.Stderr, "error sending message: %v\n", err)
-		return false, err
-	}
-	return true, nil
-}
-
-func (c *client) Replay(msg bridge.Message) (executed bool, err error) {
 	if wam, err := message.NewWhatsappMessage(msg).Build(); err == nil {
 		if _, err := c.wac.Send(wam); err != nil {
 			fmt.Fprintf(os.Stderr, "error sending message: %v\n", err)

@@ -91,32 +91,34 @@ func (m *whatsappMessage) Build() (wam interface{}, err error) {
 }
 
 func (m *whatsappMessage) GetMetaData() (*metaData, error) {
-	if m.bridgeMessage.Quote() == nil {
-		return nil, errors.New("BuildMetaData: quote missing")
-	}
-
-	quoteBody := m.bridgeMessage.Quote().Body
-	if quoteBody == nil {
-		return nil, errors.New("BuildMetaData: quote body missing")
-	}
-
-	quoteParts := strings.Split(*quoteBody, "---")
-	header := quoteParts[0]
-
 	md := &metaData{}
-	headerParts := strings.Split(header, "\n")
+	if bridgeMessageChatID := m.bridgeMessage.ChatID(); bridgeMessageChatID != "" {
+		md.WhatsappChatID = &bridgeMessageChatID
+	}
 
-	for _, row := range headerParts {
-		rowParts := strings.Split(row, ":")
-		if len(rowParts) > 1 {
-			key := rowParts[0]
-			val := strings.TrimSpace(rowParts[1])
+	if md.WhatsappChatID == nil && m.bridgeMessage.Quote() != nil {
+		quoteBody := m.bridgeMessage.Quote().Body
+		if quoteBody == nil {
+			return nil, errors.New("BuildMetaData: quote body missing")
+		}
 
-			switch strings.TrimSpace(key) {
-			// case "id":
-			// 	md.WhatsappMessageID = strings.TrimSpace(val)
-			case "chatid":
-				md.WhatsappChatID = &val
+		quoteParts := strings.Split(*quoteBody, "---")
+		header := quoteParts[0]
+
+		headerParts := strings.Split(header, "\n")
+
+		for _, row := range headerParts {
+			rowParts := strings.Split(row, ":")
+			if len(rowParts) > 1 {
+				key := rowParts[0]
+				val := strings.TrimSpace(rowParts[1])
+
+				switch strings.TrimSpace(key) {
+				// case "id":
+				// 	md.WhatsappMessageID = strings.TrimSpace(val)
+				case "chatid":
+					md.WhatsappChatID = &val
+				}
 			}
 		}
 	}
@@ -129,31 +131,30 @@ func (m *whatsappMessage) GetMetaData() (*metaData, error) {
 }
 
 func (m *whatsappMessage) GetMessageBody() (string, error) {
-	if m.bridgeMessage.Quote() == nil {
-		return "", errors.New("GetMessageBody: quote missing")
-	}
-
-	quoteBody := m.bridgeMessage.Quote().Body
-	if quoteBody == nil {
-		return "", errors.New("BuildMetaData: quote body missing")
-	}
-
-	quoteParts := strings.Split(*quoteBody, "---")
-
 	msgText := m.bridgeMessage.Body()
-	if len(quoteParts) > 1 {
-		quoteBody := strings.TrimSpace(quoteParts[1])
-		quoteBodyParts := strings.Split(quoteBody, "\n")
-		quoteTextParts := []string{}
-		for _, p := range quoteBodyParts {
-			if !strings.HasPrefix(p, "▒") {
-				quoteTextParts = append(quoteTextParts, "▒ _"+p+"_")
-			}
+
+	if m.bridgeMessage.Quote() != nil {
+		quoteBody := m.bridgeMessage.Quote().Body
+		if quoteBody == nil {
+			return "", errors.New("BuildMetaData: quote body missing")
 		}
-		quoteText := strings.Join(quoteTextParts, "\n")
-		if strings.Contains(strings.ToLower(msgText), "quote") {
-			msgText = strings.Replace(msgText, "quote", quoteText, -1)
-			msgText = strings.Replace(msgText, "Quote", quoteText, -1)
+
+		quoteParts := strings.Split(*quoteBody, "---")
+
+		if len(quoteParts) > 1 {
+			quoteBody := strings.TrimSpace(quoteParts[1])
+			quoteBodyParts := strings.Split(quoteBody, "\n")
+			quoteTextParts := []string{}
+			for _, p := range quoteBodyParts {
+				if !strings.HasPrefix(p, "▒") {
+					quoteTextParts = append(quoteTextParts, "▒ _"+p+"_")
+				}
+			}
+			quoteText := strings.Join(quoteTextParts, "\n")
+			if strings.Contains(strings.ToLower(msgText), "quote") {
+				msgText = strings.Replace(msgText, "quote", quoteText, -1)
+				msgText = strings.Replace(msgText, "Quote", quoteText, -1)
+			}
 		}
 	}
 
