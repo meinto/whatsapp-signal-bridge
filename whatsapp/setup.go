@@ -16,7 +16,7 @@ func whatsappLogin() (wac *whatsapp.Conn, err error) {
 	wac, err = whatsapp.NewConn(5 * time.Second)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating connection: %v\n", err)
-		return
+		return nil, err
 	}
 
 	//load saved session
@@ -26,8 +26,8 @@ func whatsappLogin() (wac *whatsapp.Conn, err error) {
 		session, err = wac.RestoreWithSession(session)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "restoring failed: %v\n", err)
-			fmt.Println(os.Stderr, "delete "+path.Join(os.TempDir(), "whatsappSession.gob"))
-			return
+			fmt.Fprintf(os.Stderr, "delete "+path.Join(os.TempDir(), "whatsappSession.gob"))
+			return nil, err
 		}
 	} else {
 		//no saved session -> regular login
@@ -39,6 +39,7 @@ func whatsappLogin() (wac *whatsapp.Conn, err error) {
 		session, err = wac.Login(qr)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error during login: %v\n", err)
+			return nil, err
 		}
 	}
 
@@ -46,6 +47,7 @@ func whatsappLogin() (wac *whatsapp.Conn, err error) {
 	err = writeSession(session)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error saving session: %v\n", err)
+		return nil, err
 	}
 
 	fmt.Printf("login successful, session: %v\n", session)

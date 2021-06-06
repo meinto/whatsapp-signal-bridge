@@ -28,7 +28,11 @@ type WhatsappClientOptions struct {
 }
 
 func StartClient(options WhatsappClientOptions) {
-	wac, _ := whatsappLogin()
+	wac, err := whatsappLogin()
+	if err != nil {
+		// Restart automatically (service)
+		os.Exit(2)
+	}
 
 	c := &client{
 		bridge.NewClient(options.Queue, "whatsapp"),

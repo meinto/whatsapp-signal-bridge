@@ -2,6 +2,7 @@ package whatsapp
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/whatsapp-signal-bridge/bridge"
@@ -18,8 +19,9 @@ func (c *client) ExecuteSkill(msg bridge.Message, privateSkills bool) (executed 
 		}
 
 		if privateSkills {
-			if strings.Contains(msg.Body(), "restore") && strings.Contains(msg.Body(), "whatsapp") {
-				return true, c.RestoreWhatsappConnection()
+			if strings.Contains(msg.Body(), "kill") && strings.Contains(msg.Body(), "whatsapp") {
+				os.Exit(2)
+				return true, nil
 			}
 
 			if strings.Contains(msg.Body(), "discover") {
