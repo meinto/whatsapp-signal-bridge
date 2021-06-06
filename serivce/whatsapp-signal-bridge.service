@@ -1,0 +1,18 @@
+[Unit]
+Description=Whatsapp Signal Bridge
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+# Asuming you run this on a raspberry pi
+ExecStart=/home/pi/whatsapp-signal-bridge/bot --bot=<bot-number> --receiver=<receiver-number>
+
+TimeoutSec=300
+Restart=on-failure
+RestartPreventExitStatus=1
+
+[Install]
+WantedBy=multi-user.target
